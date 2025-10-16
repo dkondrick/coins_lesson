@@ -16,10 +16,11 @@
         .baloo {
             font-family: 'Baloo 2', cursive;
         }
-        .coin-drawing {
+        .coin-image {
             transition: transform 0.3s ease-in-out;
+            max-height: 160px; /* 10rem */
         }
-        .coin-drawing:hover {
+        .coin-image:hover {
             transform: scale(1.05) rotate(5deg);
         }
         .btn-choice {
@@ -51,7 +52,7 @@
         
         <!-- Coin Display -->
         <div id="coin-display" class="mb-6 h-48 flex items-center justify-center cursor-pointer">
-            <!-- SVG drawing will be inserted here by JavaScript -->
+            <!-- Image will be inserted here by JavaScript -->
         </div>
         
         <!-- Choices -->
@@ -78,25 +79,25 @@
             { 
                 name: 'Penny', 
                 value: 0.01, 
-                svgDrawing: `<svg class="coin-drawing h-40 w-40 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#b87333" stroke="#8a5a2a" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="30" font-weight="bold" text-anchor="middle" fill="#8a5a2a">1¢</text></svg>`,
+                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/US_One_Cent_Obv.png/440px-US_One_Cent_Obv.png',
                 info: 'This is a Penny, worth 1 cent!'
             },
             { 
                 name: 'Nickel', 
                 value: 0.05, 
-                svgDrawing: `<svg class="coin-drawing h-40 w-40 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#c0c0c0" stroke="#a9a9a9" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="30" font-weight="bold" text-anchor="middle" fill="#808080">5¢</text></svg>`,
+                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/2006_Nickel_Proof_Obv.png/440px-2006_Nickel_Proof_Obv.png',
                 info: 'This is a Nickel, worth 5 cents!'
             },
             { 
                 name: 'Dime', 
                 value: 0.10, 
-                svgDrawing: `<svg class="coin-drawing h-32 w-32 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#e0e0e0" stroke="#b0b0b0" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="35" font-weight="bold" text-anchor="middle" fill="#808080">10¢</text></svg>`,
+                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/2017-P_Roosevelt_dime_obverse_transparent.png/440px-2017-P_Roosevelt_dime_obverse_transparent.png',
                 info: 'This is a Dime, worth 10 cents!'
             },
             { 
                 name: 'Quarter', 
                 value: 0.25, 
-                svgDrawing: `<svg class="coin-drawing h-44 w-44 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#dcdcdc" stroke="#a9a9a9" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="28" font-weight="bold" text-anchor="middle" fill="#808080">25¢</text></svg>`,
+                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/2006_Proof_Washington_Quarter_Obv.png/440px-2006_Proof_Washington_Quarter_Obv.png',
                 info: 'This is a Quarter, worth 25 cents!'
             }
         ];
@@ -154,8 +155,8 @@
             lastCoinIndex = randomIndex;
             currentCoin = coins[randomIndex];
 
-            // Display the coin drawing
-            coinDisplay.innerHTML = currentCoin.svgDrawing;
+            // Display the coin image
+            coinDisplay.innerHTML = `<img src="${currentCoin.imageUrl}" alt="A U.S. Coin" class="coin-image drop-shadow-lg">`;
             
             // Create and shuffle choice buttons
             createChoiceButtons();
@@ -259,6 +260,4 @@
     </script>
 </body>
 </html>
-
-
 
