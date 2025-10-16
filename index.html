@@ -114,21 +114,17 @@
         let questionType = 'name'; // 'name' or 'value'
 
         // --- SOUNDS ---
-        const correctSound = new Tone.FMSynth({
-            harmonicity: 5.1,
-            modulationIndex: 32,
+        const correctSound = new Tone.MetalSynth({
+            frequency: 400,
             envelope: {
                 attack: 0.001,
-                decay: 0.2,
-                sustain: 0.01,
+                decay: 0.1,
                 release: 0.1
             },
-            modulationEnvelope: {
-                attack: 0.01,
-                decay: 0.5,
-                sustain: 0,
-                release: 0.1
-            }
+            harmonicity: 7.5,
+            modulationIndex: 20,
+            resonance: 8000,
+            octaves: 1.5
         }).toDestination();
         
         const incorrectSound = new Tone.Synth({
@@ -221,8 +217,8 @@
 
             if (isCorrect) {
                 const now = Tone.now();
-                correctSound.triggerAttackRelease("G5", "32n", now);
-                correctSound.triggerAttackRelease("C6", "32n", now + 0.08);
+                correctSound.triggerAttackRelease("A5", "32n", now);
+                correctSound.triggerAttackRelease("C#6", "32n", now + 0.07);
                 score++;
                 scoreEl.textContent = score;
                 feedbackEl.classList.add('bg-green-100');
@@ -274,5 +270,7 @@
     </script>
 </body>
 </html>
+
+
 
 
