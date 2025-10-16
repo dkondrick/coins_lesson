@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.S. Coin Identifier Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .baloo {
+            font-family: 'Baloo 2', cursive;
+        }
+        .coin-drawing {
+            transition: transform 0.3s ease-in-out;
+        }
+        .coin-drawing:hover {
+            transform: scale(1.05) rotate(5deg);
+        }
+        .btn-choice {
+            transition: all 0.2s ease;
+        }
+        .btn-choice:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .btn-choice:active {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-blue-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="w-full max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 text-center">
+
+        <!-- Header -->
+        <header class="mb-6">
+            <h1 class="baloo text-4xl font-bold text-blue-600">Coin Identifier</h1>
+            <p class="text-gray-500 mt-1">Can you name this U.S. coin?</p>
+            <div class="mt-4 bg-gray-100 rounded-lg p-2 inline-flex items-center space-x-2">
+                <span class="font-semibold text-lg">Score:</span>
+                <span id="score" class="text-2xl font-bold text-green-500">0</span>
+            </div>
+        </header>
+        
+        <!-- Coin Display -->
+        <div id="coin-display" class="mb-6 h-48 flex items-center justify-center cursor-pointer">
+            <!-- SVG drawing will be inserted here by JavaScript -->
+        </div>
+        
+        <!-- Choices -->
+        <div id="choices-container" class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Buttons will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Feedback Message -->
+        <div id="feedback" class="h-16 flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-300">
+             <p id="feedback-text" class="text-xl font-semibold"></p>
+             <p id="coin-info" class="text-gray-600"></p>
+        </div>
+
+        <!-- Next Button -->
+        <button id="next-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 text-lg shadow-lg hidden">
+            Next Coin
+        </button>
+
+    </div>
+
+    <script>
+        // --- DATA ---
+        const coins = [
+            { 
+                name: 'Penny', 
+                value: 0.01, 
+                svgDrawing: `<svg class="coin-drawing h-40 w-40 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#b87333" stroke="#8a5a2a" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="30" font-weight="bold" text-anchor="middle" fill="#8a5a2a">1¢</text></svg>`,
+                info: 'This is a Penny, worth 1 cent!'
+            },
+            { 
+                name: 'Nickel', 
+                value: 0.05, 
+                svgDrawing: `<svg class="coin-drawing h-40 w-40 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#c0c0c0" stroke="#a9a9a9" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="30" font-weight="bold" text-anchor="middle" fill="#808080">5¢</text></svg>`,
+                info: 'This is a Nickel, worth 5 cents!'
+            },
+            { 
+                name: 'Dime', 
+                value: 0.10, 
+                svgDrawing: `<svg class="coin-drawing h-32 w-32 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#e0e0e0" stroke="#b0b0b0" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="35" font-weight="bold" text-anchor="middle" fill="#808080">10¢</text></svg>`,
+                info: 'This is a Dime, worth 10 cents!'
+            },
+            { 
+                name: 'Quarter', 
+                value: 0.25, 
+                svgDrawing: `<svg class="coin-drawing h-44 w-44 drop-shadow-lg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#dcdcdc" stroke="#a9a9a9" stroke-width="2"/><text x="50" y="65" font-family="'Baloo 2', cursive" font-size="28" font-weight="bold" text-anchor="middle" fill="#808080">25¢</text></svg>`,
+                info: 'This is a Quarter, worth 25 cents!'
+            }
+        ];
+
+        // --- STATE ---
+        let currentCoin = null;
+        let score = 0;
+        let lastCoinIndex = -1;
+        let audioStarted = false;
+
+        // --- SOUNDS ---
+        const correctSound = new Tone.FMSynth({
+            harmonicity: 5.1,
+            modulationIndex: 32,
+            envelope: {
+                attack: 0.001,
+                decay: 0.2,
+                sustain: 0.01,
+                release: 0.1
+            },
+            modulationEnvelope: {
+                attack: 0.01,
+                decay: 0.5,
+                sustain: 0,
+                release: 0.1
+            }
+        }).toDestination();
+        
+        const incorrectSound = new Tone.Synth({
+            oscillator: { type: 'square' },
+            envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.3 }
+        }).toDestination();
+
+        // --- DOM ELEMENTS ---
+        const coinDisplay = document.getElementById('coin-display');
+        const scoreEl = document.getElementById('score');
+        const choicesContainer = document.getElementById('choices-container');
+        const feedbackEl = document.getElementById('feedback');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const coinInfoEl = document.getElementById('coin-info');
+        const nextBtn = document.getElementById('next-btn');
+
+        // --- FUNCTIONS ---
+
+        /**
+         * Selects and displays a new random coin, avoiding immediate repeats.
+         */
+        function displayNewCoin() {
+            let randomIndex;
+            // Ensure the new coin is different from the last one
+            do {
+                randomIndex = Math.floor(Math.random() * coins.length);
+            } while (randomIndex === lastCoinIndex);
+            
+            lastCoinIndex = randomIndex;
+            currentCoin = coins[randomIndex];
+
+            // Display the coin drawing
+            coinDisplay.innerHTML = currentCoin.svgDrawing;
+            
+            // Create and shuffle choice buttons
+            createChoiceButtons();
+        }
+
+        /**
+         * Creates and shuffles the coin choice buttons and adds them to the DOM.
+         */
+        function createChoiceButtons() {
+            choicesContainer.innerHTML = ''; // Clear previous buttons
+            const shuffledCoins = [...coins].sort(() => Math.random() - 0.5); // Shuffle coin choices
+            
+            const buttonColors = ['bg-amber-500', 'bg-slate-500', 'bg-sky-500', 'bg-indigo-500'];
+            const hoverColors = ['hover:bg-amber-600', 'hover:bg-slate-600', 'hover:bg-sky-600', 'hover:bg-indigo-600'];
+
+            shuffledCoins.forEach((coin, index) => {
+                const button = document.createElement('button');
+                button.textContent = coin.name;
+                button.dataset.name = coin.name;
+                button.className = `btn-choice w-full text-white font-semibold py-4 px-2 rounded-xl shadow-md text-lg ${buttonColors[index % buttonColors.length]} ${hoverColors[index % hoverColors.length]}`;
+                button.addEventListener('click', () => handleChoice(button));
+                choicesContainer.appendChild(button);
+            });
+        }
+        
+        /**
+         * Handles the user's coin choice, provides feedback, and updates the score.
+         * @param {HTMLButtonElement} button The button element that was clicked.
+         */
+        function handleChoice(button) {
+            // Start audio context on first user interaction
+            if (!audioStarted) {
+                Tone.start();
+                audioStarted = true;
+            }
+
+            const selectedName = button.dataset.name;
+            const allButtons = choicesContainer.querySelectorAll('button');
+
+            // Disable all buttons after a choice is made
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (selectedName === currentCoin.name) {
+                // Correct Answer
+                const now = Tone.now();
+                correctSound.triggerAttackRelease("G5", "32n", now);
+                correctSound.triggerAttackRelease("C6", "32n", now + 0.08);
+                score++;
+                scoreEl.textContent = score;
+                feedbackEl.classList.remove('bg-red-100');
+                feedbackEl.classList.add('bg-green-100');
+                feedbackTextEl.textContent = 'Correct! 🎉';
+                feedbackTextEl.classList.remove('text-red-600');
+                feedbackTextEl.classList.add('text-green-600');
+                coinInfoEl.textContent = currentCoin.info;
+                button.classList.add('ring-4', 'ring-green-400');
+            } else {
+                // Incorrect Answer
+                incorrectSound.triggerAttackRelease("A2", "8n", Tone.now());
+                feedbackEl.classList.remove('bg-green-100');
+                feedbackEl.classList.add('bg-red-100');
+                feedbackTextEl.textContent = 'Not quite, try again!';
+                feedbackTextEl.classList.remove('text-green-600');
+                feedbackTextEl.classList.add('text-red-600');
+                coinInfoEl.textContent = '';
+                button.classList.add('ring-4', 'ring-red-400');
+
+                // Highlight the correct answer
+                const correctButton = choicesContainer.querySelector(`[data-name="${currentCoin.name}"]`);
+                if (correctButton) {
+                    correctButton.classList.add('ring-4', 'ring-green-400');
+                }
+            }
+            
+            // Show the 'Next Coin' button
+            nextBtn.classList.remove('hidden');
+        }
+
+        /**
+         * Resets the game state for the next round.
+         */
+        function setupNextRound() {
+            // Reset feedback
+            feedbackEl.className = 'h-16 flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-300';
+            feedbackTextEl.textContent = '';
+            coinInfoEl.textContent = '';
+
+            // Hide the 'Next Coin' button
+            nextBtn.classList.add('hidden');
+            
+            // Display a new coin
+            displayNewCoin();
+        }
+
+        // --- EVENT LISTENERS ---
+        nextBtn.addEventListener('click', setupNextRound);
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', setupNextRound);
+
+    </script>
+</body>
+</html>
+
+
+
